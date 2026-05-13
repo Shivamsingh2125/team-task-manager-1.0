@@ -7,45 +7,60 @@ const connectDB = require('./config/db');
 // Initialize Express
 const app = express();
 
-// Connect to Database
+// Connect Database
 connectDB();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Import Routes
+// API Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/tasks', require('./routes/taskRoutes'));
 
-// Serve frontend in production
+// Production Frontend
 if (process.env.NODE_ENV === 'production') {
+
+  // Static folder
   app.use(express.static(path.join(__dirname, '../client/dist')));
 
-  app.get('/*', (req, res) =>
+  // React/Vite frontend route
+  app.use((req, res) => {
     res.sendFile(
-      path.resolve(__dirname, '../', 'client', 'dist', 'index.html')
-    )
-  );
+      path.resolve(__dirname, '../client/dist/index.html')
+    );
+  });
+
 } else {
-  // Routes Placeholder for dev
+
+  // Development Route
   app.get('/', (req, res) => {
     res.send('API is running...');
   });
+
 }
 
-// Error Handling Middleware
+// Error Middleware
 app.use((err, req, res, next) => {
+
   const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
+
   res.status(statusCode).json({
     message: err.message,
-    stack: process.env.NODE_ENV === 'production' ? null : err.stack,
+    stack: process.env.NODE_ENV === 'production'
+      ? null
+      : err.stack,
   });
+
 });
 
+// Port
 const PORT = process.env.PORT || 5000;
 
+// Start Server
 app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+  console.log(
+    `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
+  );
 });
